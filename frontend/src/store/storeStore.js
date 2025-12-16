@@ -36,71 +36,25 @@ const useStoreStore = create((set, get) => ({
   
   getProductUrl: (product) => {
     const store = get().currentStore
-    if (!store || !product) return ''
+    if (!store || !product || !product.slug) return ''
     
-    // Get base domain from config or current location
-    let baseDomain = '72.61.239.193.sslip.io' // Default
-    if (typeof window !== 'undefined') {
-      if (window.APP_CONFIG && window.APP_CONFIG.API_URL) {
-        try {
-          const apiUrl = window.APP_CONFIG.API_URL
-          const url = new URL(apiUrl)
-          baseDomain = url.hostname.replace(/^[^.]+\./, '') || baseDomain
-        } catch (e) {
-          // Use default if URL parsing fails
-        }
-      } else {
-        // Extract from current location
-        const host = window.location.host
-        const parts = host.split('.')
-        if (parts.length >= 3) {
-          baseDomain = parts.slice(-3).join('.') // Get last 3 parts (e.g., 72.61.239.193.sslip.io)
-        }
-      }
-    }
-    
+    // Use current domain (main domain) - subdomain routing not configured yet
     const protocol = window.location.protocol
+    const host = window.location.host
     
-    // Construct product URL - use subdomain if available
-    if (store.subdomain) {
-      return `${protocol}//${store.subdomain}.${baseDomain}/p/${product.slug}`
-    }
-    
-    // Fallback to main domain with slug (works without subdomain routing)
-    return `${protocol}//${baseDomain}/p/${product.slug}`
+    // Always use main domain with /p/{slug} route
+    return `${protocol}//${host}/p/${product.slug}`
   },
   
   getStoreUrl: (store) => {
     if (!store) return ''
     
-    // Get base domain from config or current location
-    let baseDomain = '72.61.239.193.sslip.io' // Default
-    if (typeof window !== 'undefined') {
-      if (window.APP_CONFIG && window.APP_CONFIG.API_URL) {
-        try {
-          const apiUrl = window.APP_CONFIG.API_URL
-          const url = new URL(apiUrl)
-          baseDomain = url.hostname.replace(/^[^.]+\./, '') || baseDomain
-        } catch (e) {
-          // Use default if URL parsing fails
-        }
-      } else {
-        // Extract from current location
-        const host = window.location.host
-        const parts = host.split('.')
-        if (parts.length >= 3) {
-          baseDomain = parts.slice(-3).join('.') // Get last 3 parts
-        }
-      }
-    }
-    
+    // Use current domain (main domain) - subdomain routing not configured yet
     const protocol = window.location.protocol
+    const host = window.location.host
     
-    if (store.subdomain) {
-      return `${protocol}//${store.subdomain}.${baseDomain}`
-    }
-    
-    return `${protocol}//${baseDomain}`
+    // Always use main domain
+    return `${protocol}//${host}`
   },
   
   initialize: async () => {
