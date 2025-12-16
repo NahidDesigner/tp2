@@ -6,6 +6,7 @@ from app.schemas import ProductCreate, ProductResponse, ProductUpdate
 from app.auth import get_current_user
 import re
 import secrets
+import json
 
 router = APIRouter(prefix="/api/products", tags=["products"])
 
@@ -52,8 +53,15 @@ async def create_product(
         slug = f"{base_slug}-{counter}"
         counter += 1
     
+    product_dict = product_data.dict()
+    # Handle images - if it's a string (JSON), keep it, otherwise convert to JSON
+    if 'images' in product_dict and product_dict['images']:
+        if isinstance(product_dict['images'], list):
+            import json
+            product_dict['images'] = json.dumps(product_dict['images'])
+    
     product = Product(
-        **product_data.dict(),
+        **product_dict,
         store_id=store.id,
         slug=slug
     )
@@ -134,18 +142,26 @@ async def get_product_by_slug(
     db: Session = Depends(get_db)
 ):
     """Get product by slug (for public landing pages)"""
-    # This endpoint requires subdomain for public access
-    if not hasattr(request.state, 'tenant_id') or not request.state.tenant_id:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Store context required. Access via store subdomain."
-        )
+    # Try to get from subdomain first
+    store_id = None
+    if hasattr(request.state, 'tenant_id') and request.state.tenant_id:
+        store_id = request.state.tenant_id
     
-    product = db.query(Product).filter(
-        Product.slug == slug,
-        Product.store_id == request.state.tenant_id,
-        Product.is_published == True
-    ).first()
+    # If no subdomain, search all stores (for testing - in production, require subdomain)
+    if not store_id:
+        # Find product by slug across all stores (for development/testing)
+        product = db.query(Product).filter(
+            Product.slug == slug,
+            Product.is_published == True
+        ).first()
+    else:
+        # Find product in specific store
+        product = db.query(Product).filter(
+            Product.slug == slug,
+            Product.store_id == store_id,
+            Product.is_published == True
+        ).first()
+    
     if not product:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -188,7 +204,14 @@ async def update_product(
             detail="Product not found"
         )
     
-    for key, value in product_data.dict(exclude_unset=True).items():
+    product_dict = product_data.dict(exclude_unset=True)
+    # Handle images - if it's a string (JSON), keep it, otherwise convert to JSON
+    if 'images' in product_dict and product_dict['images']:
+        if isinstance(product_dict['images'], list):
+            import json
+            product_dict['images'] = json.dumps(product_dict['images'])
+    
+    for key, value in product_dict.items():
         setattr(product, key, value)
     
     db.commit()

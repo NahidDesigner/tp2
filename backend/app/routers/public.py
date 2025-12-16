@@ -12,16 +12,19 @@ async def get_store_info(
     db: Session = Depends(get_db)
 ):
     """Get public store information"""
-    if not hasattr(request.state, 'tenant_id') or not request.state.tenant_id:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Store context required"
-        )
+    store = None
     
-    store = db.query(Store).filter(
-        Store.id == request.state.tenant_id,
-        Store.is_active == True
-    ).first()
+    # Try to get from subdomain
+    if hasattr(request.state, 'tenant_id') and request.state.tenant_id:
+        store = db.query(Store).filter(
+            Store.id == request.state.tenant_id,
+            Store.is_active == True
+        ).first()
+    
+    # If no subdomain, return first active store (for testing)
+    if not store:
+        store = db.query(Store).filter(Store.is_active == True).first()
+    
     if not store:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,

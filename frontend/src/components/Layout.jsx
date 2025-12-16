@@ -1,12 +1,21 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import useAuthStore from '../store/authStore'
+import StoreSelector from './StoreSelector'
+import useStoreStore from '../store/storeStore'
 
 function Layout({ children }) {
   const { t, i18n } = useTranslation()
   const location = useLocation()
-  const { logout, user } = useAuthStore()
+  const { logout, user, isAuthenticated } = useAuthStore()
+  const { initialize } = useStoreStore()
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      initialize()
+    }
+  }, [isAuthenticated, initialize])
 
   const navItems = [
     { path: '/dashboard', icon: '📊', label: 'Dashboard' },
@@ -21,6 +30,7 @@ function Layout({ children }) {
         <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
           <h1 className="text-xl font-bold font-outfit">BD Traders</h1>
           <div className="flex items-center gap-4">
+            {isAuthenticated && <StoreSelector />}
             <button
               onClick={() => i18n.changeLanguage(i18n.language === 'bn' ? 'en' : 'bn')}
               className="text-sm px-3 py-1 bg-gray-100 rounded"

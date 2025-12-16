@@ -72,6 +72,7 @@ class ProductBase(BaseModel):
     discount_price: Optional[float] = None
     stock: int = 0
     is_published: bool = False
+    images: Optional[str] = None  # JSON array of image URLs
     meta_title: Optional[str] = None
     meta_description: Optional[str] = None
 

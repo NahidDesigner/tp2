@@ -9,6 +9,7 @@ import Products from './pages/Products'
 import Orders from './pages/Orders'
 import ProductLanding from './pages/ProductLanding'
 import Checkout from './pages/Checkout'
+import StoreSettings from './pages/StoreSettings'
 
 function App() {
   const { i18n } = useTranslation()
@@ -39,6 +40,7 @@ function App() {
         {/* Protected routes */}
         <Route path="/dashboard" element={isAuthenticated ? <Dashboard /> : <Navigate to="/login" />} />
         <Route path="/stores" element={isAuthenticated ? <Stores /> : <Navigate to="/login" />} />
+        <Route path="/stores/:storeId/settings" element={isAuthenticated ? <StoreSettings /> : <Navigate to="/login" />} />
         <Route path="/products" element={isAuthenticated ? <Products /> : <Navigate to="/login" />} />
         <Route path="/orders" element={isAuthenticated ? <Orders /> : <Navigate to="/login" />} />
         

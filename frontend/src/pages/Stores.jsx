@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import Layout from '../components/Layout'
 import apiClient from '../api/client'
@@ -95,8 +96,26 @@ function Stores() {
       <div className="grid gap-4">
         {stores.map((store) => (
           <div key={store.id} className="bg-white p-6 rounded-lg shadow">
-            <h2 className="text-xl font-semibold mb-2">{store.name}</h2>
-            <p className="text-gray-600">{store.subdomain}.72.61.239.193.sslip.io</p>
+            <div className="flex justify-between items-start">
+              <div>
+                <h2 className="text-xl font-semibold mb-2">{store.name}</h2>
+                <p className="text-gray-600 mb-2">{store.subdomain}.72.61.239.193.sslip.io</p>
+                <a
+                  href={`http://${store.subdomain}.72.61.239.193.sslip.io`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-600 text-sm hover:underline"
+                >
+                  View Store →
+                </a>
+              </div>
+              <Link
+                to={`/stores/${store.id}/settings`}
+                className="text-blue-600 text-sm hover:underline"
+              >
+                Settings
+              </Link>
+            </div>
           </div>
         ))}
         {stores.length === 0 && (
