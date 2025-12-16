@@ -27,7 +27,8 @@ function ImageUpload({ value, onChange, multiple = false }) {
       setPreview(updatedUrls)
       onChange(updatedUrls)
     } catch (error) {
-      alert(error.response?.data?.detail || 'Failed to upload images')
+      const errorMessage = error.response?.data?.detail || error.response?.data?.message || error.message || 'Failed to upload images'
+      alert(errorMessage)
     } finally {
       setUploading(false)
     }

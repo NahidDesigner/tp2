@@ -87,7 +87,8 @@ function Products() {
       resetForm()
       loadProducts()
     } catch (error) {
-      alert(error.response?.data?.detail || 'Failed to save product')
+      const errorMessage = error.response?.data?.detail || error.response?.data?.message || error.message || 'Failed to save product'
+      alert(errorMessage)
     }
   }
 

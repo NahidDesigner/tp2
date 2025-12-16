@@ -35,17 +35,43 @@ async def get_store_info(
 @router.get("/products", response_model=list[ProductResponse])
 async def get_public_products(
     request: Request,
+    slug: str = Query(None),
     db: Session = Depends(get_db)
 ):
     """Get published products for store"""
-    if not hasattr(request.state, 'tenant_id') or not request.state.tenant_id:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Store context required"
-        )
+    store_id = None
+    
+    # Try to get from subdomain
+    if hasattr(request.state, 'tenant_id') and request.state.tenant_id:
+        store_id = request.state.tenant_id
+    
+    # If slug provided, search by slug across all stores (for testing)
+    if slug:
+        if store_id:
+            products = db.query(Product).filter(
+                Product.slug == slug,
+                Product.store_id == store_id,
+                Product.is_published == True
+            ).all()
+        else:
+            # No subdomain - search all stores
+            products = db.query(Product).filter(
+                Product.slug == slug,
+                Product.is_published == True
+            ).all()
+        return products
+    
+    # If no subdomain, return first store's products (for testing)
+    if not store_id:
+        store = db.query(Store).filter(Store.is_active == True).first()
+        if store:
+            store_id = store.id
+    
+    if not store_id:
+        return []
     
     products = db.query(Product).filter(
-        Product.store_id == request.state.tenant_id,
+        Product.store_id == store_id,
         Product.is_published == True
     ).all()
     return products
