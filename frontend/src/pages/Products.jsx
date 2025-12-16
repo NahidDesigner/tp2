@@ -17,9 +17,7 @@ function Products() {
   const [filterPublished, setFilterPublished] = useState('all')
   const [formData, setFormData] = useState({
     title: '',
-    title_bn: '',
     description: '',
-    description_bn: '',
     price: '',
     discount_price: '',
     stock: '0',
@@ -94,16 +92,15 @@ function Products() {
 
   const handleEdit = (product) => {
     setEditingProduct(product)
+    // Use title/description (prefer Bangla if available, otherwise English)
     setFormData({
-      title: product.title || '',
-      title_bn: product.title_bn || '',
-      description: product.description || '',
-      description_bn: product.description_bn || '',
+      title: product.title_bn || product.title || '',
+      description: product.description_bn || product.description || '',
       price: product.price || '',
       discount_price: product.discount_price || '',
       stock: product.stock?.toString() || '0',
       is_published: product.is_published || false,
-      images: product.images ? JSON.parse(product.images) : []
+      images: product.images ? (typeof product.images === 'string' ? JSON.parse(product.images) : product.images) : []
     })
     setShowForm(true)
   }
@@ -124,9 +121,7 @@ function Products() {
     setEditingProduct(null)
     setFormData({
       title: '',
-      title_bn: '',
       description: '',
-      description_bn: '',
       price: '',
       discount_price: '',
       stock: '0',
@@ -328,10 +323,7 @@ function Products() {
                 <div className="flex-1">
                   <div className="flex justify-between items-start mb-2">
                     <div>
-                      <h2 className="text-lg font-semibold">{product.title}</h2>
-                      {product.title_bn && (
-                        <p className="text-sm text-gray-600">{product.title_bn}</p>
-                      )}
+                      <h2 className="text-lg font-semibold">{product.title_bn || product.title}</h2>
                     </div>
                     <div className="flex gap-2">
                       <button

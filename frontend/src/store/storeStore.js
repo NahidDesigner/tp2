@@ -37,14 +37,29 @@ const useStoreStore = create((set, get) => ({
   getProductUrl: (product) => {
     const store = get().currentStore
     if (!store || !product) return ''
-    const baseUrl = window.location.origin
-    // If accessed via subdomain, use that, otherwise construct URL
-    const host = window.location.host
-    if (host.includes(store.subdomain)) {
-      return `${window.location.protocol}//${host}/p/${product.slug}`
+    
+    const baseDomain = getBaseDomain()
+    const protocol = window.location.protocol
+    
+    // Construct product URL - use subdomain if available
+    if (store.subdomain) {
+      return `${protocol}//${store.subdomain}.${baseDomain}/p/${product.slug}`
     }
-    // Fallback: use subdomain
-    return `${window.location.protocol}//${store.subdomain}.72.61.239.193.sslip.io/p/${product.slug}`
+    
+    // Fallback to main domain with slug (works without subdomain routing)
+    return `${protocol}//${baseDomain}/p/${product.slug}`
+  },
+  
+  getStoreUrl: (store) => {
+    if (!store) return ''
+    const baseDomain = getBaseDomain()
+    const protocol = window.location.protocol
+    
+    if (store.subdomain) {
+      return `${protocol}//${store.subdomain}.${baseDomain}`
+    }
+    
+    return `${protocol}//${baseDomain}`
   },
   
   initialize: async () => {

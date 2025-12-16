@@ -3,9 +3,11 @@ import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import Layout from '../components/Layout'
 import apiClient from '../api/client'
+import useStoreStore from '../store/storeStore'
 
 function Stores() {
   const { t } = useTranslation()
+  const { getStoreUrl } = useStoreStore()
   const [stores, setStores] = useState([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
@@ -99,9 +101,9 @@ function Stores() {
             <div className="flex justify-between items-start">
               <div>
                 <h2 className="text-xl font-semibold mb-2">{store.name}</h2>
-                <p className="text-gray-600 mb-2">{store.subdomain}.72.61.239.193.sslip.io</p>
+                <p className="text-gray-600 mb-2">{getStoreUrl(store)}</p>
                 <a
-                  href={`http://${store.subdomain}.72.61.239.193.sslip.io`}
+                  href={getStoreUrl(store)}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-blue-600 text-sm hover:underline"
