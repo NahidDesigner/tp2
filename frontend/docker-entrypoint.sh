@@ -17,5 +17,5 @@ ls -la /app/dist/ || echo "WARNING: dist folder not found or empty"
 # Change to app directory and start the server
 cd /app
 echo "Starting serve on port 3000..."
-exec serve -s dist -l 3000 --host 0.0.0.0
+exec serve -s dist -l 3000
 

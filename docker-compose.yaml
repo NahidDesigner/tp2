@@ -30,7 +30,7 @@ services:
     expose:
       - "3000"
     environment:
-      - VITE_API_URL=${SERVICE_URL_BACKEND:-${VITE_API_URL:-http://dcow000wo0gwkoscwwscww4g.72.61.239.193.sslip.io}}
+      - VITE_API_URL=${SERVICE_URL_BACKEND:-http://dcow000wo0gwkoscwwscww4g.72.61.239.193.sslip.io}
     depends_on:
       - backend
     restart: unless-stopped
