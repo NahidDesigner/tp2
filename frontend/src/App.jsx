@@ -1,261 +1,46 @@
-import React, { useState } from 'react'
-
-// Get API URL - try multiple sources
-const getApiUrl = () => {
-  // 1. Try runtime config from config.js (highest priority)
-  if (typeof window !== 'undefined' && window.APP_CONFIG && window.APP_CONFIG.API_URL) {
-    const configUrl = window.APP_CONFIG.API_URL.trim()
-    if (configUrl && (configUrl.startsWith('http://') || configUrl.startsWith('https://'))) {
-      return configUrl
-    }
-  }
-  
-  // 2. Try build-time environment variable
-  const envUrl = import.meta.env.VITE_API_URL
-  if (envUrl && (envUrl.startsWith('http://') || envUrl.startsWith('https://'))) {
-    return envUrl
-  }
-  
-  // 3. Default fallback
-  return 'http://localhost:8000'
-}
-
-const API_URL = getApiUrl()
-
-// Log API URL for debugging
-if (typeof window !== 'undefined') {
-  console.log('API URL:', API_URL)
-}
+import React, { useEffect } from 'react'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
+import useAuthStore from './store/authStore'
+import Login from './pages/Login'
+import Dashboard from './pages/Dashboard'
+import Stores from './pages/Stores'
+import Products from './pages/Products'
+import Orders from './pages/Orders'
+import ProductLanding from './pages/ProductLanding'
+import Checkout from './pages/Checkout'
 
 function App() {
-  const [tenantId, setTenantId] = useState('')
-  const [value, setValue] = useState('')
-  const [data, setData] = useState([])
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
+  const { i18n } = useTranslation()
+  const { isAuthenticated, loadUser } = useAuthStore()
 
-  const handleSave = async () => {
-    if (!tenantId || !value) {
-      setError('Tenant ID and Value are required')
-      return
+  useEffect(() => {
+    if (isAuthenticated) {
+      loadUser()
     }
-
-    setLoading(true)
-    setError('')
-
-    try {
-      const response = await fetch(`${API_URL}/data`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Tenant-ID': tenantId
-        },
-        body: JSON.stringify({ value })
-      })
-
-      if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.detail || 'Failed to save data')
-      }
-
-      const result = await response.json()
-      setValue('')
-      setError('')
-      // Refresh data list
-      await fetchData()
-    } catch (err) {
-      setError(err.message)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const fetchData = async () => {
-    if (!tenantId) {
-      setError('Tenant ID is required')
-      return
-    }
-
-    setLoading(true)
-    setError('')
-
-    try {
-      const response = await fetch(`${API_URL}/data`, {
-        method: 'GET',
-        headers: {
-          'X-Tenant-ID': tenantId
-        }
-      })
-
-      if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.detail || 'Failed to fetch data')
-      }
-
-      const result = await response.json()
-      setData(result)
-      setError('')
-    } catch (err) {
-      setError(err.message)
-      setData([])
-    } finally {
-      setLoading(false)
-    }
-  }
+  }, [isAuthenticated, loadUser])
 
   return (
-    <div style={{
-      maxWidth: '800px',
-      margin: '50px auto',
-      padding: '20px',
-      fontFamily: 'system-ui, -apple-system, sans-serif'
-    }}>
-      <h1 style={{ textAlign: 'center', color: '#333' }}>
-        Coolify Multi Tenant Demo
-      </h1>
-      <p style={{ textAlign: 'center', color: '#666', fontSize: '12px', marginTop: '-10px', marginBottom: '20px' }}>
-        API: {API_URL}
-      </p>
-
-      <div style={{
-        backgroundColor: '#f5f5f5',
-        padding: '20px',
-        borderRadius: '8px',
-        marginBottom: '20px'
-      }}>
-        <div style={{ marginBottom: '15px' }}>
-          <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
-            Tenant ID:
-          </label>
-          <input
-            type="text"
-            value={tenantId}
-            onChange={(e) => setTenantId(e.target.value)}
-            placeholder="Enter tenant ID"
-            style={{
-              width: '100%',
-              padding: '10px',
-              fontSize: '16px',
-              border: '1px solid #ddd',
-              borderRadius: '4px',
-              boxSizing: 'border-box'
-            }}
-          />
-        </div>
-
-        <div style={{ marginBottom: '15px' }}>
-          <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
-            Value:
-          </label>
-          <input
-            type="text"
-            value={value}
-            onChange={(e) => setValue(e.target.value)}
-            placeholder="Enter value to save"
-            style={{
-              width: '100%',
-              padding: '10px',
-              fontSize: '16px',
-              border: '1px solid #ddd',
-              borderRadius: '4px',
-              boxSizing: 'border-box'
-            }}
-          />
-        </div>
-
-        <div style={{ display: 'flex', gap: '10px' }}>
-          <button
-            onClick={handleSave}
-            disabled={loading}
-            style={{
-              flex: 1,
-              padding: '12px',
-              fontSize: '16px',
-              backgroundColor: '#007bff',
-              color: 'white',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: loading ? 'not-allowed' : 'pointer',
-              opacity: loading ? 0.6 : 1
-            }}
-          >
-            {loading ? 'Saving...' : 'Save Data'}
-          </button>
-
-          <button
-            onClick={fetchData}
-            disabled={loading}
-            style={{
-              flex: 1,
-              padding: '12px',
-              fontSize: '16px',
-              backgroundColor: '#28a745',
-              color: 'white',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: loading ? 'not-allowed' : 'pointer',
-              opacity: loading ? 0.6 : 1
-            }}
-          >
-            {loading ? 'Loading...' : 'Fetch Data'}
-          </button>
-        </div>
-      </div>
-
-      {error && (
-        <div style={{
-          padding: '12px',
-          backgroundColor: '#f8d7da',
-          color: '#721c24',
-          borderRadius: '4px',
-          marginBottom: '20px'
-        }}>
-          Error: {error}
-        </div>
-      )}
-
-      <div>
-        <h2 style={{ color: '#333', marginBottom: '15px' }}>
-          Tenant Data ({data.length} records)
-        </h2>
-        {data.length === 0 ? (
-          <p style={{ color: '#666', fontStyle: 'italic' }}>
-            No data found. Save some data or fetch data for the tenant.
-          </p>
-        ) : (
-          <div style={{
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '10px'
-          }}>
-            {data.map((item) => (
-              <div
-                key={item.id}
-                style={{
-                  padding: '15px',
-                  backgroundColor: 'white',
-                  border: '1px solid #ddd',
-                  borderRadius: '4px',
-                  boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-                }}
-              >
-                <div style={{ fontWeight: 'bold', marginBottom: '5px' }}>
-                  ID: {item.id}
-                </div>
-                <div style={{ marginBottom: '5px' }}>
-                  Value: {item.value}
-                </div>
-                <div style={{ fontSize: '12px', color: '#666' }}>
-                  Created: {new Date(item.created_at).toLocaleString()}
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-    </div>
+    <BrowserRouter>
+      <Routes>
+        {/* Public routes */}
+        <Route path="/p/:slug" element={<ProductLanding />} />
+        <Route path="/checkout" element={<Checkout />} />
+        
+        {/* Auth routes */}
+        <Route path="/login" element={!isAuthenticated ? <Login /> : <Navigate to="/dashboard" />} />
+        
+        {/* Protected routes */}
+        <Route path="/dashboard" element={isAuthenticated ? <Dashboard /> : <Navigate to="/login" />} />
+        <Route path="/stores" element={isAuthenticated ? <Stores /> : <Navigate to="/login" />} />
+        <Route path="/products" element={isAuthenticated ? <Products /> : <Navigate to="/login" />} />
+        <Route path="/orders" element={isAuthenticated ? <Orders /> : <Navigate to="/login" />} />
+        
+        {/* Default */}
+        <Route path="/" element={<Navigate to="/dashboard" />} />
+      </Routes>
+    </BrowserRouter>
   )
 }
 
 export default App
-

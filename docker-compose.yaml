@@ -1,6 +1,24 @@
 version: '3.8'
 
 services:
+  db:
+    image: postgres:15-alpine
+    container_name: coolify-mt-db
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB:-bdtraders}
+      - POSTGRES_USER=${POSTGRES_USER:-bdtraders}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-bdtraders123}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    expose:
+      - "5432"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-bdtraders}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   backend:
     build:
       context: ./backend
@@ -10,12 +28,29 @@ services:
       - "8000"
     environment:
       - PORT=8000
-      - APP_NAME=${APP_NAME:-Coolify Multi Tenant Demo}
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-bdtraders}:${POSTGRES_PASSWORD:-bdtraders123}@db:5432/${POSTGRES_DB:-bdtraders}
+      - SECRET_KEY=${SECRET_KEY:-your-secret-key-change-in-production}
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY:-your-jwt-secret-change-in-production}
+      - JWT_ALGORITHM=HS256
+      - ACCESS_TOKEN_EXPIRE_MINUTES=30
+      - BASE_DOMAIN=${BASE_DOMAIN:-72.61.239.193.sslip.io}
+      - EMAIL_FROM=${EMAIL_FROM:-noreply@bdtraders.com}
+      - SMTP_HOST=${SMTP_HOST:-}
+      - SMTP_PORT=${SMTP_PORT:-587}
+      - SMTP_USER=${SMTP_USER:-}
+      - SMTP_PASSWORD=${SMTP_PASSWORD:-}
+      - WHATSAPP_API_URL=${WHATSAPP_API_URL:-}
+      - WHATSAPP_API_KEY=${WHATSAPP_API_KEY:-}
+      - FACEBOOK_PIXEL_ID=${FACEBOOK_PIXEL_ID:-}
+      - META_ACCESS_TOKEN=${META_ACCESS_TOKEN:-}
     volumes:
-      - app_data:/data
+      - uploads_data:/app/uploads
+    depends_on:
+      db:
+        condition: service_healthy
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/"]
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/health"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -36,5 +71,6 @@ services:
     restart: unless-stopped
 
 volumes:
-  app_data:
+  postgres_data:
+  uploads_data:
 

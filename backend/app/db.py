@@ -70,3 +70,4 @@ def get_tenant_data(tenant_id: str) -> List[Dict]:
         for row in rows
     ]
 
+

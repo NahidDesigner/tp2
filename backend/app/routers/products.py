@@ -1,0 +1,190 @@
+from fastapi import APIRouter, Depends, HTTPException, status, Request
+from sqlalchemy.orm import Session
+from app.database import get_db
+from app.models import Product, Store, User
+from app.schemas import ProductCreate, ProductResponse, ProductUpdate
+from app.auth import get_current_user
+import re
+import secrets
+
+router = APIRouter(prefix="/api/products", tags=["products"])
+
+def generate_slug(title: str) -> str:
+    """Generate URL-friendly slug from title"""
+    slug = re.sub(r'[^\w\s-]', '', title.lower())
+    slug = re.sub(r'[-\s]+', '-', slug)
+    return slug[:200]
+
+@router.post("", response_model=ProductResponse, status_code=status.HTTP_201_CREATED)
+async def create_product(
+    product_data: ProductCreate,
+    request: Request,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Create a new product"""
+    if not hasattr(request.state, 'tenant_id') or not request.state.tenant_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Store context required"
+        )
+    
+    store = db.query(Store).filter(
+        Store.id == request.state.tenant_id,
+        Store.owner_id == current_user.id
+    ).first()
+    if not store:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Store not found"
+        )
+    
+    slug = generate_slug(product_data.title)
+    # Ensure unique slug
+    base_slug = slug
+    counter = 1
+    while db.query(Product).filter(Product.slug == slug, Product.store_id == store.id).first():
+        slug = f"{base_slug}-{counter}"
+        counter += 1
+    
+    product = Product(
+        **product_data.dict(),
+        store_id=store.id,
+        slug=slug
+    )
+    db.add(product)
+    db.commit()
+    db.refresh(product)
+    return product
+
+@router.get("", response_model=list[ProductResponse])
+async def get_products(
+    request: Request,
+    published_only: bool = False,
+    db: Session = Depends(get_db)
+):
+    """Get products for current store"""
+    if not hasattr(request.state, 'tenant_id') or not request.state.tenant_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Store context required"
+        )
+    
+    query = db.query(Product).filter(Product.store_id == request.state.tenant_id)
+    if published_only:
+        query = query.filter(Product.is_published == True)
+    
+    products = query.all()
+    return products
+
+@router.get("/{product_id}", response_model=ProductResponse)
+async def get_product(
+    product_id: int,
+    request: Request,
+    db: Session = Depends(get_db)
+):
+    """Get product by ID"""
+    if not hasattr(request.state, 'tenant_id') or not request.state.tenant_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Store context required"
+        )
+    
+    product = db.query(Product).filter(
+        Product.id == product_id,
+        Product.store_id == request.state.tenant_id
+    ).first()
+    if not product:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Product not found"
+        )
+    return product
+
+@router.get("/slug/{slug}", response_model=ProductResponse)
+async def get_product_by_slug(
+    slug: str,
+    request: Request,
+    db: Session = Depends(get_db)
+):
+    """Get product by slug (for public landing pages)"""
+    if not hasattr(request.state, 'tenant_id') or not request.state.tenant_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Store context required"
+        )
+    
+    product = db.query(Product).filter(
+        Product.slug == slug,
+        Product.store_id == request.state.tenant_id,
+        Product.is_published == True
+    ).first()
+    if not product:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Product not found"
+        )
+    return product
+
+@router.put("/{product_id}", response_model=ProductResponse)
+async def update_product(
+    product_id: int,
+    product_data: ProductUpdate,
+    request: Request,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Update product"""
+    if not hasattr(request.state, 'tenant_id') or not request.state.tenant_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Store context required"
+        )
+    
+    product = db.query(Product).join(Store).filter(
+        Product.id == product_id,
+        Product.store_id == request.state.tenant_id,
+        Store.owner_id == current_user.id
+    ).first()
+    if not product:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Product not found"
+        )
+    
+    for key, value in product_data.dict(exclude_unset=True).items():
+        setattr(product, key, value)
+    
+    db.commit()
+    db.refresh(product)
+    return product
+
+@router.delete("/{product_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_product(
+    product_id: int,
+    request: Request,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Delete product"""
+    if not hasattr(request.state, 'tenant_id') or not request.state.tenant_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Store context required"
+        )
+    
+    product = db.query(Product).join(Store).filter(
+        Product.id == product_id,
+        Product.store_id == request.state.tenant_id,
+        Store.owner_id == current_user.id
+    ).first()
+    if not product:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Product not found"
+        )
+    
+    db.delete(product)
+    db.commit()
+    return None
+

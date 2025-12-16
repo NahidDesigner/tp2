@@ -13,3 +13,4 @@ def get_tenant_id(x_tenant_id: Optional[str] = Header(None, alias="X-Tenant-ID")
         )
     return x_tenant_id
 
+
