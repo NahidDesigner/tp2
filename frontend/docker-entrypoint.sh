@@ -7,6 +7,7 @@ window.APP_CONFIG = {
 };
 EOF
 
-# Start the server
-exec serve -s dist -l 3000
+# Change to app directory and start the server
+cd /app
+exec serve -s dist -l 3000 --host 0.0.0.0
 
