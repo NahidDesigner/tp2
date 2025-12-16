@@ -6,8 +6,8 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     container_name: coolify-mt-backend
-    ports:
-      - "${BACKEND_PORT:-8000}:8000"
+    expose:
+      - "8000"
     environment:
       - PORT=8000
       - APP_NAME=${APP_NAME:-Coolify Multi Tenant Demo}
@@ -27,8 +27,8 @@ services:
       args:
         - VITE_API_URL=${VITE_API_URL:-http://backend:8000}
     container_name: coolify-mt-frontend
-    ports:
-      - "${FRONTEND_PORT:-3000}:3000"
+    expose:
+      - "3000"
     environment:
       - VITE_API_URL=${VITE_API_URL:-http://backend:8000}
     depends_on:
