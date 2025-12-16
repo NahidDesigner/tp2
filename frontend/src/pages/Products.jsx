@@ -212,40 +212,24 @@ function Products() {
             />
             
             <div>
-              <label className="block text-sm font-medium mb-2">Product Title (English) *</label>
+              <label className="block text-sm font-medium mb-2">Product Title * (Supports English & Bangla)</label>
               <input
                 type="text"
                 value={formData.title}
                 onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                 className="w-full px-4 py-2 border rounded-lg"
+                placeholder="Enter product title in English or Bangla"
                 required
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-2">Product Title (Bangla)</label>
-              <input
-                type="text"
-                value={formData.title_bn}
-                onChange={(e) => setFormData({ ...formData, title_bn: e.target.value })}
-                className="w-full px-4 py-2 border rounded-lg"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-2">Description (English)</label>
+              <label className="block text-sm font-medium mb-2">Description (Supports English & Bangla)</label>
               <textarea
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 className="w-full px-4 py-2 border rounded-lg"
                 rows="3"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-2">Description (Bangla)</label>
-              <textarea
-                value={formData.description_bn}
-                onChange={(e) => setFormData({ ...formData, description_bn: e.target.value })}
-                className="w-full px-4 py-2 border rounded-lg"
-                rows="3"
+                placeholder="Enter product description in English or Bangla"
               />
             </div>
             <div className="grid grid-cols-2 gap-4">
