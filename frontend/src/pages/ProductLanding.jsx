@@ -18,15 +18,30 @@ function ProductLanding() {
 
   const loadProduct = async () => {
     try {
-      const response = await apiClient.get(`/api/products/slug/${slug}`)
-      setProduct(response.data)
-      
-      // Load store info
-      try {
-        const storeResponse = await apiClient.get('/api/public/store')
-        setStore(storeResponse.data)
-      } catch (e) {
-        console.error('Failed to load store:', e)
+      // Try public endpoint first (works without subdomain)
+      const publicResponse = await apiClient.get(`/api/public/products?slug=${slug}`)
+      if (publicResponse.data && publicResponse.data.length > 0) {
+        setProduct(publicResponse.data[0])
+        
+        // Load store info
+        try {
+          const storeResponse = await apiClient.get('/api/public/store')
+          setStore(storeResponse.data)
+        } catch (e) {
+          console.error('Failed to load store:', e)
+        }
+      } else {
+        // Fallback: try direct slug endpoint
+        const response = await apiClient.get(`/api/products/slug/${slug}`)
+        setProduct(response.data)
+        
+        // Load store info
+        try {
+          const storeResponse = await apiClient.get('/api/public/store')
+          setStore(storeResponse.data)
+        } catch (e) {
+          console.error('Failed to load store:', e)
+        }
       }
     } catch (error) {
       console.error('Failed to load product:', error)
