@@ -25,12 +25,12 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
       args:
-        - VITE_API_URL=${VITE_API_URL:-http://backend:8000}
+        - VITE_API_URL=${SERVICE_URL_BACKEND:-${VITE_API_URL:-http://backend:8000}}
     container_name: coolify-mt-frontend
     expose:
       - "3000"
     environment:
-      - VITE_API_URL=${VITE_API_URL:-http://backend:8000}
+      - VITE_API_URL=${SERVICE_URL_BACKEND:-${VITE_API_URL:-http://backend:8000}}
     depends_on:
       - backend
     restart: unless-stopped
