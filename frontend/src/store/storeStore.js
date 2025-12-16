@@ -38,7 +38,27 @@ const useStoreStore = create((set, get) => ({
     const store = get().currentStore
     if (!store || !product) return ''
     
-    const baseDomain = getBaseDomain()
+    // Get base domain from config or current location
+    let baseDomain = '72.61.239.193.sslip.io' // Default
+    if (typeof window !== 'undefined') {
+      if (window.APP_CONFIG && window.APP_CONFIG.API_URL) {
+        try {
+          const apiUrl = window.APP_CONFIG.API_URL
+          const url = new URL(apiUrl)
+          baseDomain = url.hostname.replace(/^[^.]+\./, '') || baseDomain
+        } catch (e) {
+          // Use default if URL parsing fails
+        }
+      } else {
+        // Extract from current location
+        const host = window.location.host
+        const parts = host.split('.')
+        if (parts.length >= 3) {
+          baseDomain = parts.slice(-3).join('.') // Get last 3 parts (e.g., 72.61.239.193.sslip.io)
+        }
+      }
+    }
+    
     const protocol = window.location.protocol
     
     // Construct product URL - use subdomain if available
@@ -52,7 +72,28 @@ const useStoreStore = create((set, get) => ({
   
   getStoreUrl: (store) => {
     if (!store) return ''
-    const baseDomain = getBaseDomain()
+    
+    // Get base domain from config or current location
+    let baseDomain = '72.61.239.193.sslip.io' // Default
+    if (typeof window !== 'undefined') {
+      if (window.APP_CONFIG && window.APP_CONFIG.API_URL) {
+        try {
+          const apiUrl = window.APP_CONFIG.API_URL
+          const url = new URL(apiUrl)
+          baseDomain = url.hostname.replace(/^[^.]+\./, '') || baseDomain
+        } catch (e) {
+          // Use default if URL parsing fails
+        }
+      } else {
+        // Extract from current location
+        const host = window.location.host
+        const parts = host.split('.')
+        if (parts.length >= 3) {
+          baseDomain = parts.slice(-3).join('.') // Get last 3 parts
+        }
+      }
+    }
+    
     const protocol = window.location.protocol
     
     if (store.subdomain) {

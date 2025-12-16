@@ -30,7 +30,9 @@ function Products() {
   }, [])
 
   useEffect(() => {
-    filterProducts()
+    if (products.length > 0 || searchTerm || filterPublished !== 'all') {
+      filterProducts()
+    }
   }, [products, searchTerm, filterPublished])
 
   const loadProducts = async () => {
