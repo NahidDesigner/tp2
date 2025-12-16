@@ -56,12 +56,26 @@ const useAuthStore = create((set, get) => ({
       return
     }
     
+    // Check if dev token - skip API call
+    if (token.startsWith('dev-token-')) {
+      const mockUser = {
+        id: 1,
+        phone: 'dev-user',
+        email: null,
+        full_name: 'Dev User',
+        is_active: true,
+        created_at: new Date().toISOString()
+      }
+      set({ user: mockUser, isAuthenticated: true, token })
+      return
+    }
+    
     try {
       const response = await apiClient.get('/api/auth/me')
       set({ user: response.data, isAuthenticated: true, token })
     } catch (error) {
-      // If 401, token is invalid - clear auth
-      if (error.response?.status === 401) {
+      // If 401, token is invalid - clear auth (unless dev token)
+      if (error.response?.status === 401 && !token.startsWith('dev-token-')) {
         localStorage.removeItem('token')
         set({ isAuthenticated: false, user: null, token: null })
       }

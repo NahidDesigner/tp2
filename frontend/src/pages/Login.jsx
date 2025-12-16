@@ -48,6 +48,38 @@ function Login() {
     setLoading(false)
   }
 
+  const handleSkipAuth = async () => {
+    // Development bypass - create a mock token and user
+    setLoading(true)
+    try {
+      // Create a mock user object
+      const mockUser = {
+        id: 1,
+        phone: 'dev-user',
+        email: null,
+        full_name: 'Dev User',
+        is_active: true,
+        created_at: new Date().toISOString()
+      }
+      
+      // Create a simple mock token (not a real JWT, just for development)
+      const mockToken = 'dev-token-' + Date.now()
+      
+      localStorage.setItem('token', mockToken)
+      useAuthStore.setState({ 
+        user: mockUser, 
+        token: mockToken, 
+        isAuthenticated: true 
+      })
+      
+      navigate('/dashboard')
+    } catch (err) {
+      setError('Failed to skip auth')
+    } finally {
+      setLoading(false)
+    }
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8">
@@ -110,13 +142,27 @@ function Login() {
           </div>
         )}
 
-        <div className="mt-6 text-center">
-          <button
-            onClick={() => i18n.changeLanguage(i18n.language === 'bn' ? 'en' : 'bn')}
-            className="text-sm text-gray-600"
-          >
-            {i18n.language === 'bn' ? 'English' : 'বাংলা'}
-          </button>
+        <div className="mt-6 space-y-2">
+          <div className="text-center">
+            <button
+              onClick={() => i18n.changeLanguage(i18n.language === 'bn' ? 'en' : 'bn')}
+              className="text-sm text-gray-600"
+            >
+              {i18n.language === 'bn' ? 'English' : 'বাংলা'}
+            </button>
+          </div>
+          <div className="pt-4 border-t">
+            <button
+              onClick={handleSkipAuth}
+              disabled={loading}
+              className="w-full bg-gray-500 text-white py-2 rounded-lg text-sm font-medium hover:bg-gray-600 disabled:opacity-50"
+            >
+              {loading ? t('loading') : 'Skip Auth (Dev Mode)'}
+            </button>
+            <p className="text-xs text-gray-500 text-center mt-2">
+              Development bypass - skip OTP authentication
+            </p>
+          </div>
         </div>
       </div>
     </div>
