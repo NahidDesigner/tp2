@@ -42,8 +42,8 @@ const getApiUrl = () => {
 
 const API_URL = getApiUrl()
 
-// Log API URL for debugging (remove in production)
-if (typeof window !== 'undefined' && import.meta.env.DEV) {
+// Log API URL for debugging
+if (typeof window !== 'undefined') {
   console.log('API URL:', API_URL)
 }
 
@@ -133,6 +133,9 @@ function App() {
       <h1 style={{ textAlign: 'center', color: '#333' }}>
         Coolify Multi Tenant Demo
       </h1>
+      <p style={{ textAlign: 'center', color: '#666', fontSize: '12px', marginTop: '-10px', marginBottom: '20px' }}>
+        API: {API_URL}
+      </p>
 
       <div style={{
         backgroundColor: '#f5f5f5',
