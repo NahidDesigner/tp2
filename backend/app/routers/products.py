@@ -23,20 +23,25 @@ async def create_product(
     db: Session = Depends(get_db)
 ):
     """Create a new product"""
-    if not hasattr(request.state, 'tenant_id') or not request.state.tenant_id:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Store context required"
-        )
+    # Get store from tenant_id (subdomain) or use first store of user
+    store = None
     
-    store = db.query(Store).filter(
-        Store.id == request.state.tenant_id,
-        Store.owner_id == current_user.id
-    ).first()
+    if hasattr(request.state, 'tenant_id') and request.state.tenant_id:
+        # Use store from subdomain
+        store = db.query(Store).filter(
+            Store.id == request.state.tenant_id,
+            Store.owner_id == current_user.id
+        ).first()
+    else:
+        # No subdomain - use first store of current user
+        store = db.query(Store).filter(
+            Store.owner_id == current_user.id
+        ).first()
+    
     if not store:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Store not found"
+            detail="No store found. Please create a store first."
         )
     
     slug = generate_slug(product_data.title)
@@ -61,16 +66,27 @@ async def create_product(
 async def get_products(
     request: Request,
     published_only: bool = False,
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """Get products for current store"""
-    if not hasattr(request.state, 'tenant_id') or not request.state.tenant_id:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Store context required"
-        )
+    store_id = None
     
-    query = db.query(Product).filter(Product.store_id == request.state.tenant_id)
+    if hasattr(request.state, 'tenant_id') and request.state.tenant_id:
+        # Use store from subdomain
+        store_id = request.state.tenant_id
+    else:
+        # No subdomain - use first store of current user
+        store = db.query(Store).filter(
+            Store.owner_id == current_user.id
+        ).first()
+        if store:
+            store_id = store.id
+    
+    if not store_id:
+        return []  # Return empty list if no store
+    
+    query = db.query(Product).filter(Product.store_id == store_id)
     if published_only:
         query = query.filter(Product.is_published == True)
     
@@ -81,18 +97,28 @@ async def get_products(
 async def get_product(
     product_id: int,
     request: Request,
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """Get product by ID"""
-    if not hasattr(request.state, 'tenant_id') or not request.state.tenant_id:
+    store_id = None
+    
+    if hasattr(request.state, 'tenant_id') and request.state.tenant_id:
+        store_id = request.state.tenant_id
+    else:
+        store = db.query(Store).filter(Store.owner_id == current_user.id).first()
+        if store:
+            store_id = store.id
+    
+    if not store_id:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Store context required"
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Store not found"
         )
     
     product = db.query(Product).filter(
         Product.id == product_id,
-        Product.store_id == request.state.tenant_id
+        Product.store_id == store_id
     ).first()
     if not product:
         raise HTTPException(
@@ -108,10 +134,11 @@ async def get_product_by_slug(
     db: Session = Depends(get_db)
 ):
     """Get product by slug (for public landing pages)"""
+    # This endpoint requires subdomain for public access
     if not hasattr(request.state, 'tenant_id') or not request.state.tenant_id:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Store context required"
+            detail="Store context required. Access via store subdomain."
         )
     
     product = db.query(Product).filter(
@@ -135,15 +162,24 @@ async def update_product(
     db: Session = Depends(get_db)
 ):
     """Update product"""
-    if not hasattr(request.state, 'tenant_id') or not request.state.tenant_id:
+    store_id = None
+    
+    if hasattr(request.state, 'tenant_id') and request.state.tenant_id:
+        store_id = request.state.tenant_id
+    else:
+        store = db.query(Store).filter(Store.owner_id == current_user.id).first()
+        if store:
+            store_id = store.id
+    
+    if not store_id:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Store context required"
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Store not found"
         )
     
     product = db.query(Product).join(Store).filter(
         Product.id == product_id,
-        Product.store_id == request.state.tenant_id,
+        Product.store_id == store_id,
         Store.owner_id == current_user.id
     ).first()
     if not product:
@@ -167,15 +203,24 @@ async def delete_product(
     db: Session = Depends(get_db)
 ):
     """Delete product"""
-    if not hasattr(request.state, 'tenant_id') or not request.state.tenant_id:
+    store_id = None
+    
+    if hasattr(request.state, 'tenant_id') and request.state.tenant_id:
+        store_id = request.state.tenant_id
+    else:
+        store = db.query(Store).filter(Store.owner_id == current_user.id).first()
+        if store:
+            store_id = store.id
+    
+    if not store_id:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Store context required"
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Store not found"
         )
     
     product = db.query(Product).join(Store).filter(
         Product.id == product_id,
-        Product.store_id == request.state.tenant_id,
+        Product.store_id == store_id,
         Store.owner_id == current_user.id
     ).first()
     if not product:
