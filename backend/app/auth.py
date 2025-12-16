@@ -40,6 +40,18 @@ def verify_token(token: str) -> dict:
         )
 
 def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)) -> User:
+    # Development mode: accept dev tokens
+    if token and token.startswith('dev-token-'):
+        # Get or create dev user
+        dev_user = db.query(User).filter(User.phone == 'dev-user').first()
+        if not dev_user:
+            dev_user = User(phone='dev-user', full_name='Dev User', is_active=True)
+            db.add(dev_user)
+            db.commit()
+            db.refresh(dev_user)
+        return dev_user
+    
+    # Production: verify real JWT token
     payload = verify_token(token)
     user_id: int = payload.get("sub")
     if user_id is None:
