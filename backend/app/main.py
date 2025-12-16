@@ -4,8 +4,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import List, Dict
 
-from db import init_db, insert_data, get_tenant_data
-from tenant import get_tenant_id
+from .db import init_db, insert_data, get_tenant_data
+from .tenant import get_tenant_id
 
 # Initialize FastAPI app
 app = FastAPI(title="Coolify Multi Tenant Demo")
