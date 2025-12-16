@@ -44,11 +44,6 @@ async def startup_event():
     upload_dir = settings.UPLOAD_DIR
     if os.path.exists(upload_dir):
         app.mount("/uploads", StaticFiles(directory=upload_dir), name="uploads")
-    # Mount static files for uploaded images
-    import os
-    upload_dir = settings.UPLOAD_DIR
-    if os.path.exists(upload_dir):
-        app.mount("/uploads", StaticFiles(directory=upload_dir), name="uploads")
 
 @app.get("/api/health")
 async def health_check():
