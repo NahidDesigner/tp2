@@ -10,6 +10,7 @@ ENV VITE_API_URL=$VITE_API_URL
 COPY package.json ./
 COPY vite.config.js ./
 COPY index.html ./
+COPY public/ ./public/
 
 # Install dependencies
 RUN npm install
@@ -31,9 +32,13 @@ RUN npm install -g serve
 # Copy built files from builder
 COPY --from=builder /app/dist ./dist
 
+# Copy entrypoint script
+COPY docker-entrypoint.sh /app/docker-entrypoint.sh
+RUN chmod +x /app/docker-entrypoint.sh
+
 # Expose port
 EXPOSE 3000
 
-# Start command
-CMD ["serve", "-s", "dist", "-l", "3000"]
+# Start command - generates config.js at runtime
+CMD ["/app/docker-entrypoint.sh"]
 

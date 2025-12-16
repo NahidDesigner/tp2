@@ -2,14 +2,11 @@ import React, { useState } from 'react'
 
 // Get API URL - try multiple sources
 const getApiUrl = () => {
-  // 1. Try meta tag (can be set at runtime)
-  if (typeof document !== 'undefined') {
-    const metaTag = document.querySelector('meta[name="api-url"]')
-    if (metaTag && metaTag.content && metaTag.content !== '%VITE_API_URL%') {
-      const metaUrl = metaTag.content.trim()
-      if (metaUrl && (metaUrl.startsWith('http://') || metaUrl.startsWith('https://'))) {
-        return metaUrl
-      }
+  // 1. Try runtime config from config.js (highest priority)
+  if (typeof window !== 'undefined' && window.APP_CONFIG && window.APP_CONFIG.API_URL) {
+    const configUrl = window.APP_CONFIG.API_URL.trim()
+    if (configUrl && (configUrl.startsWith('http://') || configUrl.startsWith('https://'))) {
+      return configUrl
     }
   }
   
@@ -19,24 +16,7 @@ const getApiUrl = () => {
     return envUrl
   }
   
-  // 3. In browser, try to construct backend URL from current location
-  if (typeof window !== 'undefined') {
-    const { protocol, host } = window.location
-    
-    // Coolify pattern: replace service name in subdomain
-    // e.g., frontend-xxx.domain.com -> backend-xxx.domain.com
-    const hostParts = host.split('.')
-    if (hostParts.length >= 3) {
-      // Try replacing first part with 'backend'
-      const newHost = ['backend', ...hostParts.slice(1)].join('.')
-      return `${protocol}//${newHost}`
-    }
-    
-    // Fallback: same origin
-    return `${protocol}//${host}`
-  }
-  
-  // 4. Default fallback
+  // 3. Default fallback
   return 'http://localhost:8000'
 }
 
