@@ -2,9 +2,14 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
+# Accept build arguments
+ARG VITE_API_URL
+ENV VITE_API_URL=$VITE_API_URL
+
 # Copy package files
 COPY package.json ./
 COPY vite.config.js ./
+COPY index.html ./
 
 # Install dependencies
 RUN npm install
