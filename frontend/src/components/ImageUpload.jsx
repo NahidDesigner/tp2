@@ -27,7 +27,30 @@ function ImageUpload({ value, onChange, multiple = false }) {
       setPreview(updatedUrls)
       onChange(updatedUrls)
     } catch (error) {
-      const errorMessage = error.response?.data?.detail || error.response?.data?.message || error.message || 'Failed to upload images'
+      console.error('Upload error:', error)
+      let errorMessage = 'Failed to upload images'
+      
+      if (error.response) {
+        const data = error.response.data
+        if (data) {
+          if (typeof data === 'string') {
+            errorMessage = data
+          } else if (data.detail) {
+            errorMessage = data.detail
+          } else if (data.message) {
+            errorMessage = data.message
+          } else if (data.error) {
+            errorMessage = data.error
+          } else {
+            errorMessage = `Error: ${error.response.status} ${error.response.statusText}`
+          }
+        } else {
+          errorMessage = `Error: ${error.response.status} ${error.response.statusText}`
+        }
+      } else if (error.message) {
+        errorMessage = error.message
+      }
+      
       alert(errorMessage)
     } finally {
       setUploading(false)
