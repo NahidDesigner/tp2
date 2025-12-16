@@ -12,13 +12,19 @@ import Checkout from './pages/Checkout'
 
 function App() {
   const { i18n } = useTranslation()
-  const { isAuthenticated, loadUser } = useAuthStore()
+  const { isAuthenticated, loadUser, token } = useAuthStore()
 
   useEffect(() => {
-    if (isAuthenticated) {
+    // Load user on mount if token exists
+    const storedToken = localStorage.getItem('token')
+    if (storedToken && !isAuthenticated) {
+      // Token exists but state not synced - reload user
+      loadUser()
+    } else if (isAuthenticated && token) {
+      // Already authenticated, just ensure user is loaded
       loadUser()
     }
-  }, [isAuthenticated, loadUser])
+  }, []) // Only run on mount
 
   return (
     <BrowserRouter>

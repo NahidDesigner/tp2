@@ -52,9 +52,9 @@ async def verify_otp_endpoint(request: OTPVerify, db: Session = Depends(get_db))
     return Token(
         access_token=access_token,
         token_type="bearer",
-        user=UserResponse.from_orm(user)
+        user=UserResponse.model_validate(user)
     )
-
+    
 @router.post("/login", response_model=Token)
 async def login(login_data: Login, db: Session = Depends(get_db)):
     """Login with phone/password or OTP"""
@@ -92,7 +92,7 @@ async def login(login_data: Login, db: Session = Depends(get_db)):
     return Token(
         access_token=access_token,
         token_type="bearer",
-        user=UserResponse.from_orm(user)
+        user=UserResponse.model_validate(user)
     )
 
 @router.get("/me", response_model=UserResponse)
