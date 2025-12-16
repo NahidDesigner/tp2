@@ -18,7 +18,8 @@ const apiClient = axios.create({
 // Add auth token to requests
 apiClient.interceptors.request.use((config) => {
   const token = localStorage.getItem('token')
-  if (token && !token.startsWith('dev-token-')) {
+  if (token) {
+    // Send dev tokens too - backend will handle them
     config.headers.Authorization = `Bearer ${token}`
   }
   // Don't set Content-Type for FormData - let browser set it with boundary
